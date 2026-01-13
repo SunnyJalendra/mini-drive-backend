@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Drive - Secure File Sharing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .header h2 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .role-btn {
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .role-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .role-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+
+        input::placeholder {
+            color: #aaa;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .toggle-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-text a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffe0e0;
+            border-radius: 6px;
+            display: none;
+            text-align: center;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            color: #51cf66;
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e7f5e7;
+            border-radius: 6px;
+            display: none;
+            text-align: center;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 40px 25px;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .header h2 {
+                font-size: 22px;
+            }
+
+            .role-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Mini Drive</h1>
+                <h2 id="pageTitle">Sign Up</h2>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="role-selector" id="roleSelector">
+                <button class="role-btn active" onclick="selectRole('user')">👤 User</button>
+                <button class="role-btn" onclick="selectRole('admin')">🔐 Admin</button>
+            </div>
+
+            <!-- User Auth Forms -->
+            <div class="auth-form active" id="userForm">
+                <!-- User Signup -->
+                <form id="userSignupForm" style="display: block;" onsubmit="handleUserSignup(event)">
+                    <div class="form-group">
+                        <label for="userEmail">Email</label>
+                        <input type="email" id="userEmail" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Password</label>
+                        <input type="password" id="userPassword" placeholder="Create password" required>
+                    </div>
+                    <button type="submit" class="btn" id="userSignupBtn">Sign Up</button>
+                    <div class="error" id="userError"></div>
+                    <div class="success" id="userSuccess"></div>
+                    <div class="loading" id="userLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </form>
+
+                <!-- User Login (Initially Hidden) -->
+                <form id="userLoginForm" style="display: none;" onsubmit="handleUserLogin(event)">
+                    <div class="form-group">
+                        <label for="userLoginEmail">Email</label>
+                        <input type="email" id="userLoginEmail" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userLoginPassword">Password</label>
+                        <input type="password" id="userLoginPassword" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn" id="userLoginBtn">Login</button>
+                    <div class="error" id="userLoginError"></div>
+                    <div class="success" id="userLoginSuccess"></div>
+                    <div class="loading" id="userLoginLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </form>
+
+                <div class="toggle-text">
+                    <span id="userToggleText">Already have an account? <a onclick="toggleForm('user')">Login</a></span>
+                </div>
+            </div>
+
+            <!-- Admin Auth Forms -->
+            <div class="auth-form" id="adminForm">
+                <!-- Admin Signup -->
+                <form id="adminSignupForm" style="display: block;" onsubmit="handleAdminSignup(event)">
+                    <div class="form-group">
+                        <label for="adminEmail">Email</label>
+                        <input type="email" id="adminEmail" placeholder="admin@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" placeholder="Create password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminCode">Admin Code</label>
+                        <input type="text" id="adminCode" placeholder="Enter admin code" required>
+                    </div>
+                    <button type="submit" class="btn" id="adminSignupBtn">Sign Up</button>
+                    <div class="error" id="adminError"></div>
+                    <div class="success" id="adminSuccess"></div>
+                    <div class="loading" id="adminLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </form>
+
+                <!-- Admin Login (Initially Hidden) -->
+                <form id="adminLoginForm" style="display: none;" onsubmit="handleAdminLogin(event)">
+                    <div class="form-group">
+                        <label for="adminLoginEmail">Email</label>
+                        <input type="email" id="adminLoginEmail" placeholder="admin@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminLoginPassword">Password</label>
+                        <input type="password" id="adminLoginPassword" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn" id="adminLoginBtn">Login</button>
+                    <div class="error" id="adminLoginError"></div>
+                    <div class="success" id="adminLoginSuccess"></div>
+                    <div class="loading" id="adminLoginLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </form>
+
+                <div class="toggle-text">
+                    <span id="adminToggleText">Already have an account? <a
+                            onclick="toggleForm('admin')">Login</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let currentRole = 'user';
+        let currentMode = 'signup'; // signup or login
+
+        function selectRole(role) {
+            currentRole = role;
+            currentMode = 'signup';
+
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            document.getElementById(role + 'Form').classList.add('active');
+
+            document.getElementById('pageTitle').textContent = 'Sign Up';
+            updateToggleText();
+        }
+
+        function toggleForm(role) {
+            currentMode = currentMode === 'signup' ? 'login' : 'signup';
+
+            const signupForm = document.getElementById(role + 'SignupForm');
+            const loginForm = document.getElementById(role + 'LoginForm');
+
+            if (currentMode === 'login') {
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                document.getElementById('pageTitle').textContent = 'Login';
+            } else {
+                signupForm.style.display = 'block';
+                loginForm.style.display = 'none';
+                document.getElementById('pageTitle').textContent = 'Sign Up';
+            }
+            updateToggleText();
+        }
+
+        function updateToggleText() {
+            const text = currentMode === 'signup'
+                ? `Already have an account? <a onclick="toggleForm('${currentRole}')">Login</a>`
+                : `Don't have an account? <a onclick="toggleForm('${currentRole}')">Sign Up</a>`;
+            document.getElementById(currentRole + 'ToggleText').innerHTML = text;
+        }
+
+        async function handleUserSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            await signup(email, password, null, 'user');
+        }
+
+        async function handleUserLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('userLoginEmail').value;
+            const password = document.getElementById('userLoginPassword').value;
+            await login(email, password, false, 'user');
+        }
+
+        async function handleAdminSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const adminCode = document.getElementById('adminCode').value;
+            await signup(email, password, adminCode, 'admin');
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminLoginEmail').value;
+            const password = document.getElementById('adminLoginPassword').value;
+            await login(email, password, true, 'admin');
+        }
+
+        async function signup(email, password, adminCode, role) {
+            const errorEl = document.getElementById(role + 'Error');
+            const successEl = document.getElementById(role + 'Success');
+            const loadingEl = document.getElementById(role + 'Loading');
+
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+            loadingEl.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, adminCode })
+                });
+
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+
+                if (!response.ok) {
+                    errorEl.textContent = data.message || 'Signup failed';
+                    errorEl.classList.add('show');
+                } else if (role === 'admin' && !data.user.isAdmin) {
+                    errorEl.textContent = 'Invalid admin code';
+                    errorEl.classList.add('show');
+                } else {
+                    successEl.textContent = 'Account created! Redirecting...';
+                    successEl.classList.add('show');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    setTimeout(() => {
+                        window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
+                    }, 1500);
+                }
+            } catch (err) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'Error: ' + err.message;
+                errorEl.classList.add('show');
+            }
+        }
+
+        async function login(email, password, requireAdmin, role) {
+            const errorEl = document.getElementById(role + 'LoginError');
+            const successEl = document.getElementById(role + 'LoginSuccess');
+            const loadingEl = document.getElementById(role + 'LoginLoading');
+
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+            loadingEl.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+
+                if (!response.ok) {
+                    errorEl.textContent = data.message || 'Login failed';
+                    errorEl.classList.add('show');
+                } else if (requireAdmin && !data.user.isAdmin) {
+                    errorEl.textContent = 'Admin account required';
+                    errorEl.classList.add('show');
+                } else {
+                    successEl.textContent = 'Login successful! Redirecting...';
+                    successEl.classList.add('show');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    setTimeout(() => {
+                        window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'dashboard.html';
+                    }, 1500);
+                }
+            } catch (err) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'Error: ' + err.message;
+                errorEl.classList.add('show');
+            }
+        }
+    </script>
+</body>
+
+</html>
