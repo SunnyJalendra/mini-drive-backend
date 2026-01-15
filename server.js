@@ -47,6 +47,7 @@ if (process.env.MONGO_URI && process.env.MONGO_URI.startsWith('mongodb')) {
 // root - serve home page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
+    // res.json({ message: 'Welcome to Mini Drive Backend API' });
 });
 
 // start server
